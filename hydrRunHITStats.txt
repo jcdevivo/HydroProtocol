@@ -1,4 +1,4 @@
-# Load required packages 2
+# Load required packages
 library("RODBC", lib.loc="C:/R/R-3.4.0/library")
 library("dataRetrieval", lib.loc="C:/R/R-3.4.0/library")
 library("EflowStats", lib.loc="C:/R/R-3.4.0/library")
