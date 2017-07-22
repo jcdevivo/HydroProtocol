@@ -1,0 +1,85 @@
+# Load required packages
+library("RODBC", lib.loc="C:/R/R-3.4.0/library")
+library("dataRetrieval", lib.loc="C:/R/R-3.4.0/library")
+library("EflowStats", lib.loc="C:/R/R-3.4.0/library")
+
+ch <- odbcConnect("HydroProtocol")
+
+#reset variables from last run
+QA1 = NA
+QA2 = NA
+rm(drainageArea)
+rm(dailyQ)
+rm(dailyQClean)
+rm(peakFlows)
+rm(siteInfo)
+rm(year_type)
+rm(AllHIT)
+rm(floodThresh)
+rm(calc_allHITOut)
+rm(calc_allHITOut.with.rownames)
+rm(EFCstation)
+QA="-"
+
+# Pull POR and station info from database #
+EFCstation<- sqlFetch(ch,"qry_HIT_standard_PORs_to_run", as.is=T)
+
+
+# Fix date formats and other prep stuff
+PORID<-EFCstation[1,4]
+sn<-EFCstation[1,1]
+year_type<-EFCstation[1,5]
+sd<-EFCstation[1,8]
+sd=as.Date(sd)
+ed<-EFCstation[1,9]
+ed=as.Date(ed)
+
+
+#Retrieve daily discharge data for period of record of interest
+dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sd, endDate = ed)
+
+#Check data for completeness
+dailyQClean <- validate_data(dailyQ[c("Date","X_00060_00003")],yearType=year_type)
+
+#Get drainage area
+siteInfo <- readNWISsite(siteNumber = sn)
+drainageArea <- siteInfo$drain_area_va
+
+#Get peak flows
+peakFlows <- readNWISpeak(siteNumber = sn, startDate = sd, endDate = ed)
+
+#Get flood recurence threshold
+floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c("peak_dt","peak_va")], yearType = year_type)
+
+#Calculate all HIT stats
+
+if (!exists('floodThresh')){
+calc_allHITOut <- calc_allHIT(dailyQClean, yearType = year_type, drainArea=drainageArea)
+calc_allHITOut.with.rownames <- data.frame(calc_allHITOut[,-1], row.names=calc_allHITOut[,1])
+AllHIT<-t(calc_allHITOut.with.rownames)
+QA1="HIT1"
+}
+
+if (!is.na(floodThresh)){
+calc_allHITOut <- calc_allHIT(dailyQClean, yearType = year_type, drainArea=drainageArea, floodThreshold=floodThresh)
+calc_allHITOut.with.rownames <- data.frame(calc_allHITOut[,-1], row.names=calc_allHITOut[,1])
+AllHIT<-t(calc_allHITOut.with.rownames)
+} 
+
+if (is.na(floodThresh)) {
+calc_allHITOut <- calc_allHIT(dailyQClean, stats=c("calc_magAverage", "calc_magLow", "calc_magHigh", "calc_frequencyLow", "calc_frequencyHigh", "calc_durationLow", "calc_durationHigh", "calc_timingLow", "calc_timingHigh", "calc_rateChange"), yearType = year_type, drainArea=drainageArea)
+calc_allHITOut.with.rownames <- data.frame(calc_allHITOut[,-1], row.names=calc_allHITOut[,1])
+AllHIT<-t(calc_allHITOut.with.rownames)
+AllHIT=cbind(AllHIT, ta1=NA, ta2=NA, ta3=NA)
+QA2="HIT2"
+}
+
+# Gernerate QA Code String
+if(!is.na(QA1)){QA=paste(QA1,QA,sep="")}
+if(!is.na(QA2)){QA=paste(QA2,QA,sep="")}
+
+#add POR, Site number, and QA codes to data frame and write to database
+AllHIT<-cbind(AllHIT, data.frame(site_no=sn, POR_ID=PORID,QA1=QA))
+AllHIT<-AllHIT[c("ma1","ma2","ma3","ma4","ma5","ma6","ma7","ma8","ma9","ma10","ma11","ma12","ma13","ma14","ma15","ma16","ma17","ma18","ma19","ma20","ma21","ma22","ma23","ma24","ma25","ma26","ma27","ma28","ma29","ma30","ma31","ma32","ma33","ma34","ma35","ma36","ma37","ma38","ma39","ma40","ma41","ma42","ma43","ma44","ma45","ml1","ml2","ml3","ml4","ml5","ml6","ml7","ml8","ml9","ml10","ml11","ml12","ml13","ml14","ml15","ml16","ml17","ml18","ml19","ml20","ml21","ml22","mh1","mh2","mh3","mh4","mh5","mh6","mh7","mh8","mh9","mh10","mh11","mh12","mh13","mh14","mh15","mh16","mh17","mh18","mh19","mh20","mh21","mh22","mh23","mh24","mh25","mh26","mh27","fl1","fl2","fl3","fh1","fh2","fh3","fh4","fh5","fh6","fh7","fh8","fh9","fh10","fh11","dl1","dl2","dl3","dl4","dl5","dl6","dl7","dl8","dl9","dl10","dl11","dl12","dl13","dl14","dl15","dl16","dl17","dl18","dl19","dl20","dh1","dh2","dh3","dh4","dh5","dh6","dh7","dh8","dh9","dh10","dh11","dh12","dh13","dh14","dh15","dh16","dh17","dh18","dh19","dh20","dh21","dh22","dh23","dh24","ta1","ta2","ta3","tl1","tl2","tl3","tl4","th1","th2","th3","ra1","ra2","ra3","ra4","ra5","ra6","ra7","ra8","ra9","site_no","POR_ID","QA1")]
+sqlSave(ch,AllHIT,"tbl_AllHIT_by_PORID",append=TRUE)
+
