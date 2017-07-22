@@ -34,7 +34,6 @@ sd=as.Date(sd)
 ed<-EFCstation[1,9]
 ed=as.Date(ed)
 
-
 #Retrieve daily discharge data for period of record of interest
 dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sd, endDate = ed)
 
