@@ -24,7 +24,6 @@ QA="-"
 # Pull POR and station info from database #
 EFCstation<- sqlFetch(ch,"qry_HIT_standard_PORs_to_run", as.is=T)
 
-
 # Fix date formats and other prep stuff
 PORID<-EFCstation[1,4]
 sn<-EFCstation[1,1]
