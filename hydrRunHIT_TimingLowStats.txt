@@ -69,9 +69,9 @@ drainageArea <- siteInfo$drain_area_va
 peakFlows <- readNWISpeak(siteNumber = sn, startDate = sd, endDate = ed)
 
 #Get flood recurence threshold
-if (EndYear==StartYear) {
-	floodThresh='Not Calculated'if (EndYear>StartYear)}
-else if {
+if(EndYear==StartYear){
+	floodThresh='Not Calculated' 
+}else{
 floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c("peak_dt","peak_va")], yearType = year_type)	
 
 #Calculate all HIT Timing Low stats
@@ -122,7 +122,7 @@ gc()
 
 # End Loop
  x = x+1
- if(x==looptarget+1)
+ if(x==looptargetx+1)
 {
  	break
  }
@@ -132,7 +132,7 @@ gc()
 sqlSave(ch,StatsOut3,"tbl_HIT_TimingLow_by_PORID",append=TRUE)
 
 # Display total runtime
-runtimeend=StatsOut3[looptarget,11]
+runtimeend=StatsOut3[looptargetx,11]
 runtimestart=StatsOut3[1,11]
 
 # End Outer Loop
