@@ -5,7 +5,7 @@ library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
 ch <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
-looptargetx=66 # Number of records per packet to write to the database at a time
+looptargetx=18 # Number of records per packet to write to the database at a time
 looptargety=1 # Number of record packets to write
 
 # Start Outer loop
@@ -67,7 +67,7 @@ drainageArea <- siteInfo$drain_area_va
 
 #Get peak flows
 peakFlows <- readNWISpeak(siteNumber = sn, startDate = sd, endDate = ed)
-peakFlowMissingData=any(is.na(peakFlows))
+peakFlowMissingData=any(is.na(peakFlows$peak_va))
 
 #Get flood recurence threshold
 
