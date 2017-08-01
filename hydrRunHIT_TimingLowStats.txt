@@ -5,8 +5,8 @@ library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
 ch <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
-looptargetx=1 # Number of records per packet to write to the database at a time
-looptargety=1 # Number of record packets to write
+looptargetx=25 # Number of records per packet to write to the database at a time
+looptargety=36 # Number of record packets to write
 
 # Start Outer loop
  y<-1
@@ -69,8 +69,21 @@ drainageArea <- siteInfo$drain_area_va
 peakFlows <- readNWISpeak(siteNumber = sn, startDate = sd, endDate = ed)
 
 #Get flood recurence threshold
+
+if (nrow(peakFlows)==0){
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NOPEAKFLOW",runtime=Sys.time()))	
+}else{
+
 if(EndYear==StartYear){
 	floodThresh='Not Calculated' 
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="1PeakFlow",runtime=Sys.time()))
+}else if(exists('peakFlows$peak_cd')){
+	floodThresh='Not Calculated' 
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="PeakFlowCode2,6",runtime=Sys.time()))
+
 }else{
 floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c("peak_dt","peak_va")], yearType = year_type)	
 
@@ -79,25 +92,17 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 	if(!nrow(dailyQ)== 0) {
 		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 		if (max(dailyQ[,4])==0) {
-			magnifStatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,QualFDSS="NOFLOW",runtime=Sys.time()))
+			magnifStatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,QualFDSS="NOFLOW",runtime=Sys.time()))
 		}
-
-		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-		else if (floodThresh=='Not Calculated') {
-			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-			#StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="1PeakFlow",runtime=Sys.time()))
-		}
-
-
 
 	#	else if (dailyQClean==FALSE) {
 	#		
 	#		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	#		#StatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, 	POR_ID=PORID,Qual_HITTimingLow="INSUFF",runtime=Sys.time()))
+	#		#StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="INSUFF",runtime=Sys.time()))
 	#	}
-		else if (!dailyQClean==FALSE) {
-			StatsOut <- calc_timingLow(dailyQClean,yearType=year_type,floodThreshold=floodThreshold)
-			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=magnifStatsOut[,1])
+		else {
+			StatsOut <- calc_timingLow(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
+			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
 			StatsOut2<-t(StatsOut.with.rownames)
 			#add POR, Site number, and QA codes to data frame and write to database
 			StatsOut2<-cbind(StatsOut2, data.frame(site_no=sn, POR_ID=PORID,Qual_HITTimingLow=QA,runtime=Sys.time()))
@@ -107,14 +112,14 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 	else if (nrow(dailyQ)== 0) {
    		
-	#		StatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NODATA",runtime=Sys.time()))
+	#		StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NODATA",runtime=Sys.time()))
 	} 
 }
+}
 
-if (exists('StatsOut3')) {
+if (exists('StatsOut3')){
 	StatsOut3<-rbind(StatsOut3,StatsOut2)
-	}
-else {
+}else{
 	StatsOut3=StatsOut2
 }
 
@@ -129,16 +134,18 @@ gc()
  }
 
 # Write Data to Database
+#ch <- odbcConnect("HydroProtocol")
 sqlSave(ch,StatsOut3,"tbl_HIT_TimingLow_by_PORID",append=TRUE)
 
 # Display total runtime
-runtimeend=StatsOut3[looptargetx,11]
-runtimestart=StatsOut3[1,11]
+runtimeend=StatsOut3[looptargetx,8]
+runtimestart=StatsOut3[1,8]
 
 # End Outer Loop
  y = y+1
- if(y==2)
+ if(y==looptargety+1)
 {
  	break
  }
 }
+odbcClose(ch)
