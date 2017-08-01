@@ -69,49 +69,47 @@ drainageArea <- siteInfo$drain_area_va
 peakFlows <- readNWISpeak(siteNumber = sn, startDate = sd, endDate = ed)
 
 #Get flood recurence threshold
-if (EndYear>StartYear) {
-	floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c("peak_dt","peak_va")], yearType = year_type)
-}
-else if (EndYear==StartYear) {
-	floodThresh='Not Calculated'
-}
-
+if (EndYear==StartYear) {
+	floodThresh='Not Calculated'if (EndYear>StartYear)}
+else if {
+floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c("peak_dt","peak_va")], yearType = year_type)	
 
 #Calculate all HIT Timing Low stats
 
-if(!nrow(dailyQ)== 0) {
-	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	if (max(dailyQ[,4])==0) {
-		magnifStatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,QualFDSS="NOFLOW",runtime=Sys.time()))
-	}
-
-	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	else if (floodThresh=='Not Calculated') {
+	if(!nrow(dailyQ)== 0) {
 		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-		#StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="1PeakFlow",runtime=Sys.time()))
+		if (max(dailyQ[,4])==0) {
+			magnifStatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,QualFDSS="NOFLOW",runtime=Sys.time()))
+		}
+
+		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+		else if (floodThresh=='Not Calculated') {
+			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+			#StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="1PeakFlow",runtime=Sys.time()))
+		}
+
+
+
+	#	else if (dailyQClean==FALSE) {
+	#		
+	#		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	#		#StatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, 	POR_ID=PORID,Qual_HITTimingLow="INSUFF",runtime=Sys.time()))
+	#	}
+		else if (!dailyQClean==FALSE) {
+			StatsOut <- calc_timingLow(dailyQClean,yearType=year_type,floodThreshold=floodThreshold)
+			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=magnifStatsOut[,1])
+			StatsOut2<-t(StatsOut.with.rownames)
+			#add POR, Site number, and QA codes to data frame and write to database
+			StatsOut2<-cbind(StatsOut2, data.frame(site_no=sn, POR_ID=PORID,Qual_HITTimingLow=QA,runtime=Sys.time()))
+		}
 	}
 
-
-
-#	else if (dailyQClean==FALSE) {
-#		
-#		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-#		#StatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="INSUFF",runtime=Sys.time()))
-#	}
-	else if (!dailyQClean==FALSE) {
-		StatsOut <- calc_timingLow(dailyQClean,yearType=year_type,floodThreshold=floodThreshold)
-		StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=magnifStatsOut[,1])
-		StatsOut2<-t(StatsOut.with.rownames)
-		#add POR, Site number, and QA codes to data frame and write to database
-		StatsOut2<-cbind(StatsOut2, data.frame(site_no=sn, POR_ID=PORID,Qual_HITTimingLow=QA,runtime=Sys.time()))
-	}
-}
-
-#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-else if (nrow(dailyQ)== 0) {
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	else if (nrow(dailyQ)== 0) {
    		
-#		StatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NODATA",runtime=Sys.time()))
-} 
+	#		StatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NODATA",runtime=Sys.time()))
+	} 
+}
 
 if (exists('StatsOut3')) {
 	StatsOut3<-rbind(StatsOut3,StatsOut2)
