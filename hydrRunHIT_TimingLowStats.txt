@@ -5,8 +5,8 @@ library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
 ch <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
-looptargetx=25 # Number of records per packet to write to the database at a time
-looptargety=36 # Number of record packets to write
+looptargetx=50 # Number of records per packet to write to the database at a time
+looptargety=20 # Number of record packets to write
 
 # Start Outer loop
  y<-1
@@ -45,8 +45,8 @@ QA="-"
 
 # Fix date formats and other prep stuff
 PORID<-HITstation[x,4]
-StartYear<-HITstation[x,6]
-EndYear<-HITstation[x,7]
+StartYear<-strtoi(HITstation[x,6])
+EndYear<-strtoi(HITstation[x,7])
 sn<-HITstation[x,1]
 year_type<-HITstation[x,5]
 sd<-HITstation[x,8]
@@ -70,21 +70,32 @@ peakFlows <- readNWISpeak(siteNumber = sn, startDate = sd, endDate = ed)
 
 #Get flood recurence threshold
 
-if (nrow(peakFlows)==0){
-	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NOPEAKFLOW",runtime=Sys.time()))	
-}else{
-
 if(EndYear==StartYear){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="1PeakFlow",runtime=Sys.time()))
-}else if(exists('peakFlows$peak_cd')){
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="1PeakFlowOneYear",runtime=Sys.time()))
+}else
+	if (nrow(peakFlows)==1){
+	floodThresh='Not Calculated' 	
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="Only1PeakFlow",runtime=Sys.time()))	
+}else 
+	if (dailyQClean==FALSE) {
+	floodThresh='Not Calculated' 
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="MissingData",runtime=Sys.time()))
+}else
+ 	if(exists('peakFlows$peak_cd')){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="PeakFlowCode2,6",runtime=Sys.time()))
+}else
+	if (nrow(peakFlows)==0){
+	floodThresh='Not Calculated' 
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NOPEAKFLOW",runtime=Sys.time()))
+} else {
 
-}else{
 floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c("peak_dt","peak_va")], yearType = year_type)	
 
 #Calculate all HIT Timing Low stats
@@ -95,11 +106,6 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 			magnifStatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,QualFDSS="NOFLOW",runtime=Sys.time()))
 		}
 
-	#	else if (dailyQClean==FALSE) {
-	#		
-	#		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	#		#StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="INSUFF",runtime=Sys.time()))
-	#	}
 		else {
 			StatsOut <- calc_timingLow(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
 			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
@@ -110,12 +116,13 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 	}
 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	else if (nrow(dailyQ)== 0) {
+	#else if (nrow(dailyQ)== 0) {
    		
 	#		StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NODATA",runtime=Sys.time()))
-	} 
+	#} 
 }
-}
+
+
 
 if (exists('StatsOut3')){
 	StatsOut3<-rbind(StatsOut3,StatsOut2)
