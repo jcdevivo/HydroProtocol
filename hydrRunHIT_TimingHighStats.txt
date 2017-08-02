@@ -159,6 +159,7 @@ runtimestart=StatsOut3[1,7]
 
 # End Outer Loop
  y = y+1
+ print(looptargety-y)
  if(y==looptargety+1)
 {
  	break
