@@ -77,6 +77,13 @@ peakFlows <- readNWISpeak(siteNumber = sn, startDate = sd, endDate = ed)
 peakFlowMissingData=any(is.na(peakFlows$peak_va))
 peakFlowMissingDate=any(is.na(peakFlows$peak_dt))
 
+if (dailyQClean==FALSE) {
+	floodThresh='Not Calculated' 
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="MissingData",runtime=Sys.time()))
+
+}else{
+
 #Get flood recurence threshold
 
 if (EndYear==StartYear){
@@ -88,11 +95,6 @@ if (EndYear==StartYear){
 	floodThresh='Not Calculated' 	
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 	StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="Only1PeakFlow",runtime=Sys.time()))	
-}else 
-	if (dailyQClean==FALSE) {
-	floodThresh='Not Calculated' 
-	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="MissingData",runtime=Sys.time()))
 }else
  	if (peakFlowMissingData==TRUE){
 	floodThresh='Not Calculated' 
@@ -143,7 +145,7 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 	}
 }
 }
-
+}
 
 if (exists('StatsOut3')){
 	StatsOut3<-rbind(StatsOut3,StatsOut2)
@@ -162,7 +164,7 @@ gc()
  }
 
 # Write Data to Database
-#ch <- odbcConnect("HydroProtocol")
+#ch2 <- odbcConnect("HydroProtocol")
 sqlSave(ch2,StatsOut3,"tbl_HIT_TimingAverage_by_PORID",append=TRUE)
 
 # Display total runtime
