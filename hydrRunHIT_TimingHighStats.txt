@@ -58,6 +58,12 @@ ed=as.Date(ed)
 #Retrieve daily discharge data for period of record of interest
 dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sd, endDate = ed)
 
+if (nrow(dailyQ)==0){
+	floodThresh='Not Calculated' 	
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NoFlowData",runtime=Sys.time()))
+}else{ 
+
 #Check data for completeness
 dailyQClean <- validate_data(dailyQ[c("Date","X_00060_00003")],yearType=year_type)
 
@@ -130,7 +136,7 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 		}
 	}
 }
-
+}
 
 
 if (exists('StatsOut3')){
