@@ -5,8 +5,8 @@ library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
 ch <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
-looptargetx=18 # Number of records per packet to write to the database at a time
-looptargety=1 # Number of record packets to write
+looptargetx=50 # Number of records per packet to write to the database at a time
+looptargety=787 # Number of record packets to write
 
 # Start Outer loop
  y<-1
@@ -152,8 +152,9 @@ runtimeend=StatsOut3[looptargetx,8]
 runtimestart=StatsOut3[1,8]
 
 # End Outer Loop
+ print(looptargety-y)
  y = y+1
- if(y==looptargety+1)
+  if(y==looptargety+1)
 {
  	break
  }
