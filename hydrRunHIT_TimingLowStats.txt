@@ -96,6 +96,11 @@ if (EndYear==StartYear){
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="PeakFlowCodePresent",runtime=Sys.time()))
 }else
+	if (nrow(peakFlows)==1){
+	floodThresh='Not Calculated' 
+	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="OnePeakFlow",runtime=Sys.time()))
+}else
 	if (nrow(peakFlows)==0){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
