@@ -6,7 +6,7 @@ chMA <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
 looptargetx=50 # Number of records per packet to write to the database at a time
-looptargety=859 # Number of record packets to write
+looptargety=866 # Number of record packets to write
 
 # Start Outer loop
  y<-1
@@ -61,7 +61,7 @@ dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sdate, 
 if (nrow(dailyQ)==0){
 	floodThresh='Not Calculated' 	
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="NoFlowData",runtime=Sys.time()))
+	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="NoFlowData",runtime=Sys.time()))
 }else{ 
 
 #Check data for completeness
@@ -71,7 +71,7 @@ dailyQClean <- validate_data(dailyQ[c("Date","X_00060_00003")],yearType=year_typ
 if (dailyQClean==FALSE) {
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="MissingData",runtime=Sys.time()))
+	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="MissingData",runtime=Sys.time()))
 
 }else{
 
@@ -91,32 +91,32 @@ peakFlowMissingDate=any(is.na(peakFlows$peak_dt))
 if (EndYear==StartYear){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="1PeakFlowOneYear",runtime=Sys.time()))
+	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="1PeakFlowOneYear",runtime=Sys.time()))
 }else
 	if (nrow(peakFlows)==1){
 	floodThresh='Not Calculated' 	
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="Only1PeakFlow",runtime=Sys.time()))	
+	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="Only1PeakFlow",runtime=Sys.time()))	
 }else
  	if (peakFlowMissingData==TRUE){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="MissingPeakFlow",runtime=Sys.time()))
+	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="MissingPeakFlow",runtime=Sys.time()))
 }else
  	if (peakFlowMissingDate==TRUE){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="MissingPeakFlowDate",runtime=Sys.time()))
+	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="MissingPeakFlowDate",runtime=Sys.time()))
 }else
  	if(exists('peakFlows$peak_cd')){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="PeakFlowCodePresent",runtime=Sys.time()))
+	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="PeakFlowCodePresent",runtime=Sys.time()))
 }else
 	if (nrow(peakFlows)==0){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="NOPEAKFLOW",runtime=Sys.time()))
+	StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="NOPEAKFLOW",runtime=Sys.time()))
 } else {
 
 floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c("peak_dt","peak_va")], yearType = year_type)	
@@ -131,13 +131,13 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 			if(floodThresh=="NaN"){
 			floodThresh='Not Calculated' 
 			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-			StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage="FloodThreshNaN",runtime=Sys.time()))
+			StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="FloodThreshNaN",runtime=Sys.time()))
 		} else {
-			StatsOut <- calc_magnitudeAverage(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
+			StatsOut <- calc_magAverage(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
 			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
 			StatsOut2<-t(StatsOut.with.rownames)
 			#add POR, Site number, and QA codes to data frame and write to database
-			StatsOut2<-cbind(StatsOut2, data.frame(site_no=sn, POR_ID=PORID,Qual_HITMagnitudeAverage=QA,runtime=Sys.time()))
+			StatsOut2<-cbind(StatsOut2, data.frame(site_no=sn, POR_ID=PORID,Qual_HITMagAverage=QA,runtime=Sys.time()))
 		}
 	}
 }
@@ -163,7 +163,7 @@ gc()
 
 # Write Data to Database
 #ch <- odbcConnect("HydroProtocol")
-sqlSave(chMA,StatsOut3,"tbl_HIT_MagnitudeAverage_by_PORID",append=TRUE)
+sqlSave(chMA,StatsOut3,"tbl_HIT_MagAverage_by_PORID",append=TRUE)
 
 # Display total runtime
 runtimeend=StatsOut3[looptargetx,7]
