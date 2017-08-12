@@ -2,7 +2,7 @@ library("RODBC", lib.loc="C:/R/R-3.4.1/library")
 library("dataRetrieval", lib.loc="C:/R/R-3.4.1/library")
 library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
 
-chDL <- odbcConnect("HydroProtocol")
+chFL <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
 looptargetx=50 # Number of records per packet to write to the database at a time
@@ -17,7 +17,7 @@ if (exists('StatsOut3')) {rm(StatsOut3)}
 if (exists('HITstation')) {rm(HITstation)}
 
 # Pull POR and station info from database #
-HITstation<- sqlFetch(chDL,"qry_HIT_FrequencyLowStats_standard_PORs_to_run", as.is=T)
+HITstation<- sqlFetch(chFL,"qry_HIT_FrequencyLowStats_standard_PORs_to_run", as.is=T)
 
 # Start Loop
  x<-1
@@ -163,7 +163,7 @@ gc()
 
 # Write Data to Database
 #ch <- odbcConnect("HydroProtocol")
-sqlSave(chDL,StatsOut3,"tbl_HIT_FrequencyLow_by_PORID",append=TRUE)
+sqlSave(chFL,StatsOut3,"tbl_HIT_FrequencyLow_by_PORID",append=TRUE)
 
 # Display total runtime
 runtimeend=StatsOut3[looptargetx,7]
@@ -177,4 +177,4 @@ runtimestart=StatsOut3[1,7]
  	break
  }
 }
-odbcClose(chDL)
+odbcClose(chFL)
