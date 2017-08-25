@@ -6,7 +6,7 @@ chMA <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
 looptargetx=50 # Number of records per packet to write to the database at a time
-looptargety=866 # Number of record packets to write
+looptargety=377 # Number of record packets to write
 
 # Start Outer loop
  y<-1
@@ -76,6 +76,7 @@ if (dailyQClean==FALSE) {
 }else{
 
 DailyFlowIsZero=any(is.element(0,dailyQClean$discharge))
+DailyFlowIsNegative=any(dailyQClean$discharge<0)
 
 #Get drainage area
 siteInfo <- readNWISsite(siteNumber = sn)
@@ -126,12 +127,17 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 	if(!nrow(dailyQ)== 0) {
 		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 		if (max(dailyQ[,4])==0) {
-			magnifStatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,QualFDSS="NOFLOW",runtime=Sys.time()))
+			magnifStatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="NOFLOW",runtime=Sys.time()))
 		} else
 			if(floodThresh=="NaN"){
 			floodThresh='Not Calculated' 
 			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 			StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="FloodThreshNaN",runtime=Sys.time()))
+		} else
+			if(DailyFlowIsNegative==TRUE){
+			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+			StatsOut2<-cbind(data.frame(ma1=NA, ma2=NA, ma3=NA, ma4=NA, ma5=NA, ma6=NA, ma7=NA, ma8=NA, ma9=NA, ma10=NA, ma11=NA, ma12=NA, ma13=NA, ma14=NA, ma15=NA, ma16=NA, ma17=NA, ma18=NA, ma19=NA, ma20=NA, ma21=NA, ma22=NA, ma23=NA, ma24=NA, ma25=NA, ma26=NA, ma27=NA, ma28=NA, ma29=NA, ma30=NA, ma31=NA, ma32=NA, ma33=NA, ma34=NA, ma35=NA, ma36=NA, ma37=NA, ma38=NA, ma39=NA, ma40=NA, ma41=NA, ma42=NA, ma43=NA, ma44=NA, ma45=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="NegativeFlowsPresent
+",runtime=Sys.time()))
 		} else {
 			StatsOut <- calc_magAverage(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
 			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
