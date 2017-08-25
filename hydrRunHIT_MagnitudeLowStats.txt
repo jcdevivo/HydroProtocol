@@ -76,6 +76,7 @@ if (dailyQClean==FALSE) {
 }else{
 
 DailyFlowIsZero=any(is.element(0,dailyQClean$discharge))
+DailyFlowIsNegative=any(dailyQClean$discharge<0)
 
 #Get drainage area
 siteInfo <- readNWISsite(siteNumber = sn)
@@ -126,12 +127,17 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 	if(!nrow(dailyQ)== 0) {
 		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 		if (max(dailyQ[,4])==0) {
-			magnifStatsOut2<-cbind(data.frame(ml1=NA, ml2=NA, ml3=NA, ml4=NA, ml5=NA, ml6=NA, ml7=NA, ml8=NA, ml9=NA, ml10=NA, ml11=NA, ml12=NA, ml13=NA, ml14=NA, ml15=NA, ml16=NA, ml17=NA, ml18=NA, ml19=NA, ml20=NA, ml21=NA, ml22=NA, site_no=sn, POR_ID=PORID,QualFDSS="NOFLOW",runtime=Sys.time()))
+			magnifStatsOut2<-cbind(data.frame(ml1=NA, ml2=NA, ml3=NA, ml4=NA, ml5=NA, ml6=NA, ml7=NA, ml8=NA, ml9=NA, ml10=NA, ml11=NA, ml12=NA, ml13=NA, ml14=NA, ml15=NA, ml16=NA, ml17=NA, ml18=NA, ml19=NA, ml20=NA, ml21=NA, ml22=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeLow="NOFLOW",runtime=Sys.time()))
 		} else
 			if(floodThresh=="NaN"){
 			floodThresh='Not Calculated' 
 			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 			StatsOut2<-cbind(data.frame(ml1=NA, ml2=NA, ml3=NA, ml4=NA, ml5=NA, ml6=NA, ml7=NA, ml8=NA, ml9=NA, ml10=NA, ml11=NA, ml12=NA, ml13=NA, ml14=NA, ml15=NA, ml16=NA, ml17=NA, ml18=NA, ml19=NA, ml20=NA, ml21=NA, ml22=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeLow="FloodThreshNaN",runtime=Sys.time()))
+#		} else
+#			if(DailyFlowIsNegative==TRUE){
+#			floodThresh='Not Calculated' 
+#			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+#			StatsOut2<-cbind(data.frame(ml1=NA, ml2=NA, ml3=NA, ml4=NA, ml5=NA, ml6=NA, ml7=NA, ml8=NA, ml9=NA, ml10=NA, ml11=NA, ml12=NA, ml13=NA, ml14=NA, ml15=NA, ml16=NA, ml17=NA, ml18=NA, ml19=NA, ml20=NA, ml21=NA, ml22=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeLow="NegativeFlowsPresent",runtime=Sys.time()))
 		} else {
 			StatsOut <- calc_magnitudeLow(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
 			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
