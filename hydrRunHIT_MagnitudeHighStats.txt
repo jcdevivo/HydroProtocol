@@ -76,6 +76,7 @@ if (dailyQClean==FALSE) {
 }else{
 
 DailyFlowIsZero=any(is.element(0,dailyQClean$discharge))
+DailyFlowIsNegative=any(dailyQClean$discharge<0)
 
 #Get drainage area
 siteInfo <- readNWISsite(siteNumber = sn)
@@ -132,6 +133,12 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 			floodThresh='Not Calculated' 
 			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 			StatsOut2<-cbind(data.frame(mh1=NA, mh2=NA, mh3=NA, mh4=NA, mh5=NA, mh6=NA, mh7=NA, mh8=NA, mh9=NA, mh10=NA, mh11=NA, mh12=NA, mh13=NA, mh14=NA, mh15=NA, mh16=NA, mh17=NA, mh18=NA, mh19=NA, mh20=NA, mh21=NA, mh22=NA, mh23=NA, mh24=NA, mh25=NA, mh26=NA, mh27=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeHigh="FloodThreshNaN",runtime=Sys.time()))
+
+#		} else
+#			if(DailyFlowIsNegative==TRUE){
+#			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+#			StatsOut2<-cbind(data.frame(mh1=NA, mh2=NA, mh3=NA, mh4=NA, mh5=NA, mh6=NA, mh7=NA, mh8=NA, mh9=NA, mh10=NA, mh11=NA, mh12=NA, mh13=NA, mh14=NA, mh15=NA, mh16=NA, mh17=NA, mh18=NA, mh19=NA, mh20=NA, mh21=NA, mh22=NA, mh23=NA, mh24=NA, mh25=NA, mh26=NA, mh27=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="NegativeFlowsPresent",runtime=Sys.time()))
+#
 		} else {
 			StatsOut <- calc_magnitudeHigh(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
 			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
