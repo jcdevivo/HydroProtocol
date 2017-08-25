@@ -6,7 +6,7 @@ chML <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
 looptargetx=50 # Number of records per packet to write to the database at a time
-looptargety=859 # Number of record packets to write
+looptargety=866 # Number of record packets to write
 
 # Start Outer loop
  y<-1
@@ -139,7 +139,7 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 #			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 #			StatsOut2<-cbind(data.frame(ml1=NA, ml2=NA, ml3=NA, ml4=NA, ml5=NA, ml6=NA, ml7=NA, ml8=NA, ml9=NA, ml10=NA, ml11=NA, ml12=NA, ml13=NA, ml14=NA, ml15=NA, ml16=NA, ml17=NA, ml18=NA, ml19=NA, ml20=NA, ml21=NA, ml22=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeLow="NegativeFlowsPresent",runtime=Sys.time()))
 		} else {
-			StatsOut <- calc_magnitudeLow(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
+			StatsOut <- calc_magLow(dailyQClean,yearType=year_type,floodThreshold=floodThresh, digits=3,drainArea=drainageArea)
 			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
 			StatsOut2<-t(StatsOut.with.rownames)
 			#add POR, Site number, and QA codes to data frame and write to database
@@ -168,8 +168,8 @@ gc()
 }
 
 # Write Data to Database
-#ch <- odbcConnect("HydroProtocol")
-sqlSave(chML,StatsOut3,"tbl_HIT_MagnitudeLow_by_PORID",append=TRUE)
+#chML <- odbcConnect("HydroProtocol")
+sqlSave(chML,StatsOut3,"tbl_HIT_MagLow_by_PORID",append=TRUE)
 
 # Display total runtime
 runtimeend=StatsOut3[looptargetx,7]
