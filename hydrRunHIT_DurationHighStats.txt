@@ -6,7 +6,7 @@ chDH <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
 looptargetx=50 # Number of records per packet to write to the database at a time
-looptargety=643 # Number of record packets to write
+looptargety=470 # Number of record packets to write
 
 # Start Outer loop
  y<-1
