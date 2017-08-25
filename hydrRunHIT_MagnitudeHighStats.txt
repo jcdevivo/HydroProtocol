@@ -6,7 +6,7 @@ chMH <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
 looptargetx=50 # Number of records per packet to write to the database at a time
-looptargety=859 # Number of record packets to write
+looptargety=866 # Number of record packets to write
 
 # Start Outer loop
  y<-1
@@ -137,10 +137,10 @@ floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c
 #		} else
 #			if(DailyFlowIsNegative==TRUE){
 #			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-#			StatsOut2<-cbind(data.frame(mh1=NA, mh2=NA, mh3=NA, mh4=NA, mh5=NA, mh6=NA, mh7=NA, mh8=NA, mh9=NA, mh10=NA, mh11=NA, mh12=NA, mh13=NA, mh14=NA, mh15=NA, mh16=NA, mh17=NA, mh18=NA, mh19=NA, mh20=NA, mh21=NA, mh22=NA, mh23=NA, mh24=NA, mh25=NA, mh26=NA, mh27=NA, site_no=sn, POR_ID=PORID,Qual_HITMagAverage="NegativeFlowsPresent",runtime=Sys.time()))
+#			StatsOut2<-cbind(data.frame(mh1=NA, mh2=NA, mh3=NA, mh4=NA, mh5=NA, mh6=NA, mh7=NA, mh8=NA, mh9=NA, mh10=NA, mh11=NA, mh12=NA, mh13=NA, mh14=NA, mh15=NA, mh16=NA, mh17=NA, mh18=NA, mh19=NA, mh20=NA, mh21=NA, mh22=NA, mh23=NA, mh24=NA, mh25=NA, mh26=NA, mh27=NA, site_no=sn, POR_ID=PORID,Qual_HITMagnitudeHigh="NegativeFlowsPresent",runtime=Sys.time()))
 #
 		} else {
-			StatsOut <- calc_magnitudeHigh(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
+			StatsOut <- calc_magHigh(dailyQClean,yearType=year_type,floodThreshold=floodThresh, digits=3, drainArea = drainageArea)
 			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
 			StatsOut2<-t(StatsOut.with.rownames)
 			#add POR, Site number, and QA codes to data frame and write to database
@@ -169,8 +169,8 @@ gc()
 }
 
 # Write Data to Database
-#ch <- odbcConnect("HydroProtocol")
-sqlSave(chMH,StatsOut3,"tbl_HIT_MagnitudeHigh_by_PORID",append=TRUE)
+#chMH <- odbcConnect("HydroProtocol")
+sqlSave(chMH,StatsOut3,"tbl_HIT_MagHigh_by_PORID",append=TRUE)
 
 # Display total runtime
 runtimeend=StatsOut3[looptargetx,7]
