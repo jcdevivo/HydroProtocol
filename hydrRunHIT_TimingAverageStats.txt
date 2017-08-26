@@ -2,11 +2,11 @@ library("RODBC", lib.loc="C:/R/R-3.4.1/library")
 library("dataRetrieval", lib.loc="C:/R/R-3.4.1/library")
 library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
 
-ch2 <- odbcConnect("HydroProtocol")
+chTA <- odbcConnect("HydroProtocol")
 
 #Set looping parameters
-looptargetx=1 # Number of records per packet to write to the database at a time
-looptargety=1 # Number of record packets to write
+looptargetx=50 # Number of records per packet to write to the database at a time
+looptargety=650 # Number of record packets to write
 
 # Start Outer loop
  y<-1
@@ -17,7 +17,7 @@ if (exists('StatsOut3')) {rm(StatsOut3)}
 if (exists('HITstation')) {rm(HITstation)}
 
 # Pull POR and station info from database #
-HITstation<- sqlFetch(ch2,"qry_HIT_TimingAverageStats_standard_PORs_to_run", as.is=T)
+HITstation<- sqlFetch(chTA,"qry_HIT_TimingAverageStats_standard_PORs_to_run", as.is=T)
 
 # Start Loop
  x<-1
@@ -31,7 +31,7 @@ if (exists ('year_type')) {rm(year_type)}
 if (exists ('StatsOut')) {rm(StatsOut)}
 if (exists ('StatsOut2')) {rm(StatsOut2)}
 if (exists ('StatsOut.with.rownames')) {rm(StatsOut.with.rownames)}
-if (exists ('sd')) {rm(sd)}
+if (exists ('sdate')) {rm(sdate)}
 if (exists ('sn')) {rm(sn)}
 if (exists ('ed')) {rm(ed)}
 if (exists ('PORID')) {rm(PORID)}
@@ -49,33 +49,24 @@ StartYear<-strtoi(HITstation[x,6])
 EndYear<-strtoi(HITstation[x,7])
 sn<-HITstation[x,1]
 year_type<-HITstation[x,5]
-sd<-HITstation[x,8]
-sd=as.Date(sd)
+sdate<-HITstation[x,8]
+sdate=as.Date(sdate)
 ed<-HITstation[x,9]
 ed=as.Date(ed)
 
 
 #Retrieve daily discharge data for period of record of interest
-dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sd, endDate = ed)
+dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sdate, endDate = ed)
 
 if (nrow(dailyQ)==0){
 	floodThresh='Not Calculated' 	
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	StatsOut2<-cbind(data.frame(tl1=NA, tl2=NA, tl3=NA, tl4=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingLow="NoFlowData",runtime=Sys.time()))
+	StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="NoFlowData",runtime=Sys.time()))
 }else{ 
 
 #Check data for completeness
+
 dailyQClean <- validate_data(dailyQ[c("Date","X_00060_00003")],yearType=year_type)
-DailyFlowIsZero=any(is.element(0,dailyQClean$discharge))
-
-#Get drainage area
-siteInfo <- readNWISsite(siteNumber = sn)
-drainageArea <- siteInfo$drain_area_va
-
-#Get peak flows
-peakFlows <- readNWISpeak(siteNumber = sn, startDate = sd, endDate = ed)
-peakFlowMissingData=any(is.na(peakFlows$peak_va))
-peakFlowMissingDate=any(is.na(peakFlows$peak_dt))
 
 if (dailyQClean==FALSE) {
 	floodThresh='Not Calculated' 
@@ -83,6 +74,18 @@ if (dailyQClean==FALSE) {
 	StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="MissingData",runtime=Sys.time()))
 
 }else{
+
+DailyFlowIsZero=any(is.element(0,dailyQClean$discharge))
+DailyFlowIsNegative=any(dailyQClean$discharge<0)
+
+#Get drainage area
+siteInfo <- readNWISsite(siteNumber = sn)
+drainageArea <- siteInfo$drain_area_va
+
+#Get peak flows
+peakFlows <- readNWISpeak(siteNumber = sn, startDate = sdate, endDate = ed)
+peakFlowMissingData=any(is.na(peakFlows$peak_va))
+peakFlowMissingDate=any(is.na(peakFlows$peak_dt))
 
 #Get flood recurence threshold
 
@@ -106,7 +109,7 @@ if (EndYear==StartYear){
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 	StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="MissingPeakFlowDate",runtime=Sys.time()))
 }else
-	if(exists('peakFlows$peak_cd')){
+ 	if(exists('peakFlows$peak_cd')){
 	floodThresh='Not Calculated' 
 	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 	StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="PeakFlowCodePresent",runtime=Sys.time()))
@@ -119,33 +122,41 @@ if (EndYear==StartYear){
 
 floodThresh <- get_peakThreshold(dailyQClean[c("date","discharge")], peakFlows[c("peak_dt","peak_va")], yearType = year_type)	
 
-#Calculate all HIT Timing Low stats
+#Calculate all HIT Timing Average stats
 
 	if(!nrow(dailyQ)== 0) {
 		#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 		if (max(dailyQ[,4])==0) {
-			magnifStatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="NOFLOW",runtime=Sys.time()))
+			StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="NOFLOW",runtime=Sys.time()))
 		} else
 			if(floodThresh=="NaN"){
 			floodThresh='Not Calculated' 
 			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
 			StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="FloodThreshNaN",runtime=Sys.time()))
-		} else
-			if(DailyFlowIsZero==TRUE){
-			floodThresh='Not Calculated' 
-			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-			StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="ZeroDischargesCannotCalculate",runtime=Sys.time()))
+#		} else
+#			if(DailyFlowIsNegative==TRUE){
+#			floodThresh='Not Calculated' 
+#			#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+#			StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="NegativeFlowsPresent",runtime=Sys.time()))
 		} else {
-			StatsOut <- calc_timingAverage(dailyQClean,yearType=year_type,floodThreshold=floodThresh)
+			StatsOut <- try(calc_timingAverage(dailyQClean,yearType=year_type,digits=3,pref="mean",floodThreshold=floodThresh))
+
+			if (class(StatsOut)=="try-error"){
+			StatsOut2<-cbind(data.frame(ta1=NA, ta2=NA, ta3=NA, site_no=sn, POR_ID=PORID,Qual_HITTimingAverage="CodeBug",runtime=Sys.time()))	
+			} else {
+
+
 			StatsOut.with.rownames <- data.frame(StatsOut[,-1], row.names=StatsOut[,1])
 			StatsOut2<-t(StatsOut.with.rownames)
 			#add POR, Site number, and QA codes to data frame and write to database
 			StatsOut2<-cbind(StatsOut2, data.frame(site_no=sn, POR_ID=PORID,Qual_HITTimingAverage=QA,runtime=Sys.time()))
+			}
 		}
 	}
 }
 }
-}
+ }
+
 
 if (exists('StatsOut3')){
 	StatsOut3<-rbind(StatsOut3,StatsOut2)
@@ -164,19 +175,19 @@ gc()
  }
 
 # Write Data to Database
-#ch2 <- odbcConnect("HydroProtocol")
-sqlSave(ch2,StatsOut3,"tbl_HIT_TimingAverage_by_PORID",append=TRUE)
+#chTA <- odbcConnect("HydroProtocol")
+sqlSave(chTA,StatsOut3,"tbl_HIT_TimingAverage_by_PORID",append=TRUE)
 
 # Display total runtime
-runtimeend=StatsOut3[looptargetx,8]
-runtimestart=StatsOut3[1,8]
+runtimeend=StatsOut3[looptargetx,7]
+runtimestart=StatsOut3[1,7]
 
 # End Outer Loop
  print(looptargety-y)
  y = y+1
-  if(y==looptargety+1)
+ if(y==looptargety+1)
 {
  	break
  }
 }
-odbcClose(ch2)
+odbcClose(chTA)
