@@ -1,0 +1,152 @@
+library("RODBC", lib.loc="C:/R/R-3.4.1/library")
+library("IHA", lib.loc="C:/R/R-3.4.1/library")
+library("dataRetrieval", lib.loc="C:/R/R-3.4.1/library")
+library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
+library("tibble", lib.loc="C:/R/R-3.4.1/library")
+
+chIHA <- odbcConnect("HydroProtocol")
+
+#Set looping parameters
+looptargety=412 # Number of record packets to write
+
+# Start Outer loop
+ y<-1
+ repeat
+{
+
+if (exists('StatsOut2')) {rm(StatsOut2)}
+if (exists('IHAstation')) {rm(IHAstation)}
+
+# Pull POR and station info from database #
+IHAstation<- sqlFetch(chIHA,"qry_IHA_PORs_to_Process", as.is=T)
+
+#reset variables from last run
+if (exists ('dailyQ')) {rm(dailyQ)}
+if (exists ('dailyQClean')) {rm(dailyQClean)}
+if (exists ('year_type')) {rm(year_type)}
+if (exists ('StatsOut')) {rm(StatsOut)}
+if (exists ('sdate')) {rm(sdate)}
+if (exists ('sn')) {rm(sn)}
+if (exists ('ed')) {rm(ed)}
+if (exists ('start_year')) {rm(start_year)}
+if (exists ('PORID')) {rm(PORID)}
+if (exists ('IHAGroup1')) {rm(IHAGroup1)}
+if (exists ('IHAGroup2')) {rm(IHAGroup2)}
+if (exists ('IHAGroup3')) {rm(IHAGroup3)}
+if (exists ('IHAGroup4')) {rm(IHAGroup4)}
+if (exists ('IHAGroup5')) {rm(IHAGroup5)}
+QA="-"
+
+
+#dummy variables for code testing. these will be replaced by a looping function later
+
+sn<-IHAstation[1,1]
+year_type<-IHAstation[1,5]
+sdate<-IHAstation[1,8]
+sdate=as.Date(sdate)
+ed<-IHAstation[1,9]
+ed=as.Date(ed)
+PORID<-IHAstation[1,4]
+start_year<-IHAstation[1,6]
+QA="-"
+
+#Pull the data and convert to a zoo object
+
+dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sdate, endDate = ed)
+
+# if (nrow(dailyQ)==1){
+# 	IHA='Not Calculated' 	
+#	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
+#	StatsOut2<-cbind(data.frame(
+#		site_no=sn, 
+#		YearType=year_type, 
+#		POR_ID=PORID,
+#		year=start_year,
+#		October=NA, November=NA, December=NA, January=NA, February=NA, March=NA, April=NA, May=NA, June=NA, July=NA, August=NA, September=NA,
+#		"1DayMin"=NA,"1DayMax"=NA,"3DayMin"=NA,"3DayMax"=NA,"7DayMin"=NA,"7DayMax"=NA,"30DayMin"=NA,"30DayMax"=NA,"90DayMin"=NA,"90DayMax"=NA,
+#		Zeroflowdays=NA,Baseindex=NA,
+#		Min=NA,Max=NA,
+#		Lowpulsenumber=NA,Lowpulselength=NA,Highpulsenumber=NA,Highpulselength=NA,
+#		Riserate=NA,Fallrate=NA,Reversals=NA,
+#		Qual_IHA="Only1FlowRecord",runtime=Sys.time()))
+#
+# colnames(StatsOut2)[16]<-"1DayMin"
+# colnames(StatsOut2)[17]<-"1DayMax"
+# colnames(StatsOut2)[18]<-"3DayMax"
+# colnames(StatsOut2)[19]<-"3DayMin"
+# colnames(StatsOut2)[20]<-"7DayMax"
+# colnames(StatsOut2)[21]<-"7DayMin"
+# colnames(StatsOut2)[22]<-"30DayMax"
+# colnames(StatsOut2)[23]<-"30DayMax"
+# colnames(StatsOut2)[24]<-"90DayMin"
+# colnames(StatsOut2)[25]<-"90DayMax"
+# colnames(StatsOut2)[26]<-"Zero flow days"
+# colnames(StatsOut2)[27]<-"Base index"
+#
+# colnames(StatsOut2)[30]<-"Low pulse number"
+# colnames(StatsOut2)[31]<-"Low pulse length"
+# colnames(StatsOut2)[32]<-"High pulse number"
+# colnames(StatsOut2)[33]<-"High pulse length"
+# colnames(StatsOut2)[34]<-"Rise rate"
+# colnames(StatsOut2)[35]<-"Fall rate"
+#
+# }else{
+
+dailyQZoo=zoo(as.numeric(dailyQ$X_00060_00003),order.by=as.Date(dailyQ$Date))
+
+#calculate the IHA statistics
+
+#Group 1
+IHAGroup1<-group1(dailyQZoo,year=year_type)
+
+#Group 2
+IHAGroup2<-try(group2(dailyQZoo,year=year_type,mimic.tnc=T))
+
+if (class(IHAGroup2)=="try-error"){
+	IHAGroup2<-group2(dailyQZoo,year=year_type,mimic.tnc=F)
+	QA="mimictncFalse"
+ }
+
+#Group 3
+IHAGroup3<-try(group3(dailyQZoo,year=year_type,mimic.tnc=T))
+	if (class(IHAGroup3)=="try-error"){
+		IHAGroup3<-try(group3(dailyQZoo,year=year_type,mimic.tnc=F))
+		QA="mimictncFalse"
+		} 
+
+#Group 4
+IHAGroup4<-group4(dailyQZoo,year=year_type)
+
+#Group 5
+IHAGroup5<-group5(dailyQZoo,year=year_type)
+
+IHAGroup1=rownames_to_column(as.data.frame(IHAGroup1),var="year")
+IHAGroup3=rownames_to_column(as.data.frame(IHAGroup3),var="year")
+IHAGroup4=rownames_to_column(as.data.frame(IHAGroup4),var="year")
+IHAGroup5=rownames_to_column(as.data.frame(IHAGroup5),var="year")
+
+#transform data frames to storable records
+
+
+StatsOut=merge(x=IHAGroup1, y=IHAGroup2, by="year")
+StatsOut=merge(x=StatsOut, y=IHAGroup3, by="year")
+StatsOut=merge(x=StatsOut, y=IHAGroup4, by="year")
+StatsOut=merge(x=StatsOut, y=IHAGroup5, by="year")
+
+StatsOut2<-cbind(data.frame(site_no=sn, YearType=year_type, POR_ID=PORID), StatsOut, data.frame(Qual_IHA=QA,runtime=Sys.time()))
+# }
+
+# Write Data to Database
+#chIHA <- odbcConnect("HydroProtocol")
+sqlSave(chIHA,StatsOut2,"tbl_IHA_by_Station",append=TRUE)
+
+# End Outer Loop
+ print(looptargety-y)
+ y = y+1
+ if(y==looptargety+1)
+{
+ 	break
+ }
+}
+
+odbcClose(chIHA)
