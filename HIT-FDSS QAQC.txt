@@ -1,0 +1,108 @@
+library("RODBC", lib.loc="C:/R/R-3.4.1/library")
+library("reshape2", lib.loc="C:/R/R-3.4.1/library")
+
+
+#############
+#
+# Step 1. Generating the data points to check.
+#
+############
+
+library("RODBC", lib.loc="C:/R/R-3.4.1/library")
+library("reshape2", lib.loc="C:/R/R-3.4.1/library")
+
+chQAQC1 <- odbcConnect("HydroProtocol")
+
+# Pull 100 Random stations and calculated metrics from database #
+StationsToCheck<- sqlFetch(chQAQC1,"qry_QAQC_100stations_HIT-FDSS", as.is=T)
+
+# Reshape and add columns for recording QAQC results
+QAQC_out<-melt(StationsToCheck, id.vars=1:5, value.name = "ProtocolValue", variable.name="Metric")
+QAQC_out["ActualValue"]<-NA
+QAQC_out["QualCode"]<-NA
+
+# Write Table back to database
+sqlSave(chQAQC1,QAQC_out,"tbl_QC_Test-HIT-FDSS",append=TRUE)
+
+odbcClose(chQAQC1)
+
+
+#############
+#
+# Step 2. Qualify Errors. 
+#
+############
+
+library("RODBC", lib.loc="C:/R/R-3.4.1/library")
+library("reshape2", lib.loc="C:/R/R-3.4.1/library")
+
+chQAQC2 <- odbcConnect("HydroProtocol")
+
+# Pull QAQC table with Checked Values #
+CheckedDataTable<- sqlFetch(chQAQC2,"qry_QAQC_HIT-FDSS_Step_2", as.is=T)
+
+# Update any fields with different values to MVS code
+
+#Start Loop
+	y<-1
+	repeat 
+{
+
+if(is.na(CheckedDataTable[y,7])==TRUE){CheckedDataTable[y,9]="MCE"}
+	
+if(is.na(CheckedDataTable[y,7])==FALSE){
+
+	if(!(CheckedDataTable[y,7]==CheckedDataTable[y,8]))
+	{
+		CheckedDataTable[y,9]="MVS"
+	}
+
+}
+
+y = y+1
+if(y==17801) {break}
+}
+
+# Update any fields with consistent MVS codes to MCS code
+
+
+# Write Table back to database
+
+
+odbcClose(chQAQC2)
+
+
+####################
+#
+# Step 2a. check precision errors.
+# Note... need to write to database and then requry a subset for this step.
+#
+######################
+
+#Start Loop
+	y<-1
+	repeat 
+{
+
+if(is.na(CheckedDataTable[y,9])==FALSE){
+
+if(CheckedDataTable[y,9]=='MVS'){
+
+if(round(CheckedDataTable[y,7], digits=CheckedDataTable[y,10])==CheckedDataTable[y,8]){
+
+		CheckedDataTable[y,9]="MPE"
+}
+}
+}
+y = y+1
+if(y==17801) {break}
+}
+
+
+
+
+#############
+#
+# Step 3. Data Quality Evaluation 
+#
+############
