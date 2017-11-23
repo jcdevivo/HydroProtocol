@@ -63,28 +63,16 @@ y = y+1
 if(y==17801) {break}
 }
 
-# Update any fields with consistent MVS codes to MCS code
+CheckedDataTable<-subset(CheckedDataTable, CheckedDataTable$StartYear>0)
 
-
-# Write Table back to database
-
-
-odbcClose(chQAQC2)
-
-
-####################
-#
-# Step 2a. check precision errors.
-# Note... need to write to database and then requry a subset for this step.
-#
-######################
 
 #Start Loop
 	y<-1
 	repeat 
 {
 
-if(is.na(CheckedDataTable[y,9])==FALSE){
+if(!is.na(CheckedDataTable[y,7])==TRUE){
+if(!is.na(CheckedDataTable[y,9])==TRUE){
 
 if(CheckedDataTable[y,9]=='MVS'){
 
@@ -94,12 +82,14 @@ if(round(CheckedDataTable[y,7], digits=CheckedDataTable[y,10])==CheckedDataTable
 }
 }
 }
+}
 y = y+1
 if(y==17801) {break}
 }
 
+CheckedDataTable<-subset(CheckedDataTable, CheckedDataTable$StartYear>0)
 
-
+odbcClose(chQAQC2)
 
 #############
 #
