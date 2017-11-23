@@ -1,5 +1,6 @@
 library("RODBC", lib.loc="C:/R/R-3.4.1/library")
 library("reshape2", lib.loc="C:/R/R-3.4.1/library")
+library(dplyr)
 
 
 #############
@@ -89,6 +90,15 @@ if(y==17801) {break}
 
 CheckedDataTable<-subset(CheckedDataTable, CheckedDataTable$StartYear>0)
 
+# Tally Error Code Rates
+QualCodeTally <- CheckedDataTable %>% group_by(Metric,QualCode) %>% tally()
+PORCount <- CheckedDataTable %>% group_by(Metric) %>% tally()
+QualCodeTally<-merge(QualCodeTally,PORCount,by="Metric")
+QualCodeTally["Percentage"]<-(QualCodeTally$n.x/QualCodeTally$n.y)
+
+#Write Tables back to database
+
+
 odbcClose(chQAQC2)
 
 #############
@@ -96,3 +106,4 @@ odbcClose(chQAQC2)
 # Step 3. Data Quality Evaluation 
 #
 ############
+
