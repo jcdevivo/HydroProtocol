@@ -86,15 +86,8 @@ if(y==17801) {break}
 
 CheckedDataTable<-subset(CheckedDataTable, CheckedDataTable$StartYear>0)
 
-# Tally Error Code Rates
-QualCodeTally <- CheckedDataTable %>% group_by(Metric,QualCode) %>% tally()
-PORCount <- CheckedDataTable %>% group_by(Metric) %>% tally()
-QualCodeTally<-merge(QualCodeTally,PORCount,by="Metric")
-QualCodeTally["Percentage"]<-(QualCodeTally$n.x/QualCodeTally$n.y)
-
 #Write Tables back to database
 sqlSave(chQAQC2,CheckedDataTable,"tbl_QC_Test_Results-HIT-FDSS",append=TRUE)
-sqlSave(chQAQC2,QualCodeTally,"tbl_QC_Test_Results_Summary-HIT-FDSS",append=TRUE)
 
 odbcClose(chQAQC2)
 
@@ -104,3 +97,25 @@ odbcClose(chQAQC2)
 #
 ############
 
+library("RODBC", lib.loc="C:/R/R-3.4.1/library")
+library("reshape2", lib.loc="C:/R/R-3.4.1/library")
+library(dplyr)
+
+chQAQC3 <- odbcConnect("HydroProtocol")
+
+# Tally Error Code Rates by Metric
+QualCodeTally <- CheckedDataTable %>% group_by(Metric,QualCode) %>% tally()
+PORCount <- CheckedDataTable %>% group_by(Metric) %>% tally()
+QualCodeTally<-merge(QualCodeTally,PORCount,by="Metric")
+QualCodeTally["Percentage"]<-(QualCodeTally$n.x/QualCodeTally$n.y)
+
+# Tally Error Code Rates by site_no
+QualCodeTally2 <- CheckedDataTable %>% group_by(site_no,QualCode) %>% tally()
+StationCount <- CheckedDataTable %>% group_by(site_no) %>% tally()
+QualCodeTally2<-merge(QualCodeTally2,StationCount,by="site_no")
+QualCodeTally2["Percentage"]<-(QualCodeTally2$n.x/QualCodeTally2$n.y)
+
+sqlSave(chQAQC3,QualCodeTally,"tbl_QC_Test_Results_Summary-HIT-FDSS",append=TRUE)
+sqlSave(chQAQC3,QualCodeTally2,"tbl_QC_Test_Results_Summary-HIT-FDSS_2",append=TRUE)
+
+odbcClose(chQAQC3)
