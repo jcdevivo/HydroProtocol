@@ -10,7 +10,7 @@ library("reshape2", lib.loc="C:/R/R-3.4.1/library")
 chQAQC1 <- odbcConnect("HydroProtocol")
 
 # Pull 100 Random stations and calculated metrics from database #
-StationsToCheck<- sqlFetch(chQAQC1,"qry_QAQC_100stations_HIT-FDSS", as.is=T)
+StationsToCheck<- sqlFetch(chQAQC1,"qry_QAQC_100stations_IHA", as.is=T)
 
 # Reshape and add columns for recording QAQC results
 QAQC_out<-melt(StationsToCheck, id.vars=1:5, value.name = "ProtocolValue", variable.name="Metric")
@@ -18,7 +18,7 @@ QAQC_out["ActualValue"]<-NA
 QAQC_out["QualCode"]<-NA
 
 # Write Table back to database
-sqlSave(chQAQC1,QAQC_out,"tbl_QC_Test-HIT-FDSS",append=TRUE)
+sqlSave(chQAQC1,QAQC_out,"tbl_QC_Test-IHA",append=TRUE)
 
 odbcClose(chQAQC1)
 
