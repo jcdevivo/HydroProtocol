@@ -1,0 +1,16 @@
+#########################
+#
+# Part 1. Updating Station Metadata. Note that this assumes all station IDs are correct and will throw an error
+# if any are not legitimate.  
+#
+########################
+library("RODBC", lib.loc="C:/R/R-3.4.0/library")
+library("dataRetrieval", lib.loc="C:/R/R-3.4.1/library")
+
+ch <- odbcConnect("HydroProtocol")
+
+stationstoget <- sqlFetch(ch,"qry_stations_to_get", as.is=T) 
+siteInfo <- readNWISsite(stationstoget[,1])
+
+sqlSave(ch,siteInfo,"tbl_siteInfo",append=TRUE)
+
