@@ -1,6 +1,6 @@
 #########################
 #
-# Part 1. Updating Station Metadata. Note that this assumes all station IDs are correct and will throw an error
+# Part 1. Updating Station Metadata . Note that this assumes all station IDs are correct and will throw an error
 # if any are not legitimate.  
 #
 ########################
@@ -14,3 +14,63 @@ siteInfo <- readNWISsite(stationstoget[,1])
 
 sqlSave(ch,siteInfo,"tbl_siteInfo",append=TRUE)
 
+odbcCloseAll()
+
+#########################
+#
+# Part 2. Appending records to the Parks X Station Crosstab Table
+#
+#########################
+
+library("RODBC", lib.loc="C:/R/R-3.4.0/library")
+library("dataRetrieval", lib.loc="C:/R/R-3.4.1/library")
+
+ch <- odbcConnect("HydroProtocol")
+
+nms <- c("Unit_Code","site_no")
+parkstations<-rbind(setNames(stationstoget[c(5,1)],nms),setNames(stationstoget[c(6,1)],nms),setNames(stationstoget[c(7,1)],nms))
+parkstations<-parkstations[complete.cases(parkstations),]
+
+
+sqlSave(ch,parkstations,"qry_site_no_X_park_xtab", rownames=FALSE, append=TRUE)
+
+odbcCloseAll()
+
+#########################
+#
+# Part 3. Updating what data are avaialable for each station, with PORs for each measure
+#
+#########################
+
+library("RODBC", lib.loc="C:/R/R-3.4.0/library")
+library("dataRetrieval", lib.loc="C:/R/R-3.4.0/library")
+
+ch <- odbcConnect("HydroProtocol")
+
+##### Delete all records in the DataAvailable table
+# This step is optional, and should only be done during annual runs of all station statistics
+#####
+#sqlQuery(ch, paste("DELETE FROM tbl_DataAvailable;"))
+
+##### Get list of all stations where we need to figure out PORs for discharge data
+# This will return all stations where we don't have information about what data are collected at the station.
+# Note that station information should be deleted for all stations prior to annual updates
+#####
+
+stationstogetparams <- sqlFetch(ch,"qry_DataAvailable_sites_to_Process", as.is=T)
+
+x <- 1
+stopcount<-nrow(stationstogetparams)+1
+repeat {
+    
+    sitenumber<-stationstogetparams[x,2]
+    DataAvailable <- whatNWISdata(sitenumber)
+    if (dim(DataAvailable)[1]==0){DataAvailable[1,3] = sitenumber}
+    sqlSave(ch, DataAvailable,"tbl_DataAvailable",append=TRUE)
+    x = x+1
+    if (x == stopcount){
+        break
+    }
+}
+
+odbcCloseAll()
