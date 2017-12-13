@@ -14,13 +14,23 @@ chQAQC1 <- odbcConnect("HydroProtocol")
 # Pull 100 Random stations and calculated metrics from database #
 StationsToCheck<- sqlFetch(chQAQC1,"qry_QAQC_100stations_IHA", as.is=T)
 
-# Reshape and add columns for recording QAQC results
+# Reshape and add columns for recording QAQC results for metric values
 QAQC_out<-melt(StationsToCheck, id.vars=1:5, value.name = "ProtocolValue", variable.name="Metric")
 QAQC_out["ActualValue"]<-NA
 QAQC_out["QualCode"]<-NA
 
+# Reshape and add columns for recording QAQC results for periods of record
+QAQC_out2<-distinct(StationsToCheck[1:2])
+QAQC_out2["PVS"]<-NA
+QAQC_out2["PPE"]<-NA
+QAQC_out2["PCE"]<-NA
+
+QAQC_out3<-cbind(StationsToCheck[1:2],StationsToCheck[5:38])
+
 # Write Table back to database
 sqlSave(chQAQC1,QAQC_out,"tbl_QC_Test-IHA",append=TRUE)
+sqlSave(chQAQC1,QAQC_out2,"tbl_QC_Test-IHA2",append=TRUE)
+sqlSave(chQAQC1,QAQC_out3,"tbl_QC_Test-IHA3",append=TRUE)
 
 #Retrieve daily discharge data for periods of record of interest
 USGS_fetch<-distinct(StationsToCheck[,c(1:4)])
