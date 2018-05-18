@@ -1,6 +1,94 @@
 library("RODBC", lib.loc="C:/R/R-3.4.1/library")
 library("dataRetrieval", lib.loc="C:/R/R-3.4.1/library")
 library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
+library("lubridate", lib.loc="C:/R/R-3.5.0/library")
+
+ch <- odbcConnect("Hydro")
+POR2run<-sqlFetch(ch,"dbo.xtab_site_no_X_PORs_for_Analysis",as.is = c(TRUE), stringsAsFactors = FALSE)
+siteInfo<-sqlFetch(ch,"dbo.tbl_siteInfo",as.is = c(TRUE), stringsAsFactors = FALSE)
+MasterPORs<-sqlFetch(ch,"dbo.tlu_PORs",as.is = c(TRUE), stringsAsFactors = FALSE)
+odbcClose(ch)
+colnames(MasterPORs)[5] <- "AnalysisStartDate"
+colnames(MasterPORs)[6] <- "AnalysisEndDate"
+
+POR2run<-merge(POR2run,MasterPORs,by="POR_ID")
+POR2run<-merge(POR2run,siteInfo,by="siteInfoID")
+
+POR2run$AnalysisStartDate<-ymd(as.Date(POR2run$AnalysisStartDate))
+POR2run$AnalysisEndDate<-ymd(as.Date(POR2run$AnalysisEndDate))
+
+totalrows<-nrow(POR2run)
+currentrow<-1
+
+repeat 
+{
+
+sn<-POR2run[currentrow,11]
+sd<-POR2run[currentrow,8]
+ed<-POR2run[currentrow,9]
+AnalysisPORID<-POR2run[currentrow,3]
+
+dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sd, endDate = ed)
+
+dailyQClean <- validate_data(dailyQ[c("Date","X_00060_00003")],yearType="water")
+
+magnifStatsOut <- calc_magnifSeven(dailyQClean,yearType="water",digits=3)
+magnifStatsOut.with.rownames <- data.frame(magnifStatsOut[,-1], row.names=magnifStatsOut[,1])
+magnifStatsOut2<-t(magnifStatsOut.with.rownames)
+
+#add POR, Site number, and QA codes to data frame and write to database
+magnifStatsOut2<-cbind(AnalysisPOR_ID=AnalysisPORID,magnifStatsOut2, data.frame(site_no=sn, runtime=Sys.time()))
+
+if (exists('magnifStatsOut3')) {
+	magnifStatsOut3<-rbind(magnifStatsOut3,magnifStatsOut2)
+	} else {
+	magnifStatsOut3=magnifStatsOut2
+}
+
+# End Loop
+ currentrow = currentrow+1
+ if(currentrow==100+1)
+{
+ 	break
+ }
+ }
+
+ch <- odbcConnect("Hydro")
+sqlSave(ch,magnifStatsOut3,"dbo.vw_FDSS_by_AnalysisPORID",append=TRUE,rownames=FALSE)
+odbcClose(ch)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library("RODBC", lib.loc="C:/R/R-3.4.1/library")
+library("dataRetrieval", lib.loc="C:/R/R-3.4.1/library")
+library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
 
 ch <- odbcConnect("HydroProtocol")
 
