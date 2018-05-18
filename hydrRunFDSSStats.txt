@@ -1,12 +1,3 @@
-library("RODBC", lib.loc="C:/R/R-3.5.0/library")
-library("dataRetrieval", lib.loc="C:/R/R-3.5.0/library")
-library("EflowStats", lib.loc="C:/R/R-3.5.0/library")
-library("lubridate", lib.loc="C:/R/R-3.5.0/library")
-library("dplyr", lib.loc="C:/R/R-3.5.0/library")
-library("dplyr", lib.loc="C:/R/R-3.5.0/library")
-
-ch <- odbcConnect("Hydro")
-POR2run<-sqlFetch(ch,"dbo.xtab_site_no_X_PORs_for_Analysis",as.is = c(TRUE), stringsAsFactors = FALSE)
 siteInfo<-sqlFetch(ch,"dbo.tbl_siteInfo",as.is = c(TRUE), stringsAsFactors = FALSE)
 RunFDSS<-sqlFetch(ch,"dbo.vw_FDSS_by_AnslysisPORID",as.is = c(TRUE), stringsAsFactors = FALSE)
 MasterPORs<-sqlFetch(ch,"dbo.tlu_PORs",as.is = c(TRUE), stringsAsFactors = FALSE)
@@ -22,6 +13,7 @@ POR2run$AnalysisEndDate<-ymd(as.Date(POR2run$AnalysisEndDate))
 
 POR2run<-anti_join(POR2run,RunFDSS,by="AnalysisPORID")
 
+rm(magnifStatsOut3)
 totalrows<-nrow(POR2run)
 currentrow<-1
 
@@ -42,7 +34,7 @@ magnifStatsOut.with.rownames <- data.frame(magnifStatsOut[,-1], row.names=magnif
 magnifStatsOut2<-t(magnifStatsOut.with.rownames)
 
 #add POR, Site number, and QA codes to data frame and write to database
-magnifStatsOut2<-cbind(AnalysisPOR_ID=AnalysisPORID,magnifStatsOut2, data.frame(site_no=sn, runtime=Sys.time()))
+magnifStatsOut2<-cbind(AnalysisPORID=AnalysisPORID,magnifStatsOut2, data.frame(site_no=sn, runtime=Sys.time()))
 
 if (exists('magnifStatsOut3')) {
 	magnifStatsOut3<-rbind(magnifStatsOut3,magnifStatsOut2)
@@ -52,7 +44,7 @@ if (exists('magnifStatsOut3')) {
 
 # End Loop
  currentrow = currentrow+1
- if(currentrow==100+1)
+ if(currentrow==10+1)
 {
  	break
  }
