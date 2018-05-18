@@ -1,3 +1,18 @@
+library("RODBC", lib.loc="C:/R/R-3.5.0/library")
+library("dataRetrieval", lib.loc="C:/R/R-3.5.0/library")
+library("EflowStats", lib.loc="C:/R/R-3.5.0/library")
+library("lubridate", lib.loc="C:/R/R-3.5.0/library")
+library("dplyr", lib.loc="C:/R/R-3.5.0/library")
+library("dplyr", lib.loc="C:/R/R-3.5.0/library")
+
+
+totalchunks<-830
+currentchunk<-1
+
+repeat 
+{
+ch <- odbcConnect("Hydro")
+POR2run<-sqlFetch(ch,"dbo.xtab_site_no_X_PORs_for_Analysis",as.is = c(TRUE), stringsAsFactors = FALSE)
 siteInfo<-sqlFetch(ch,"dbo.tbl_siteInfo",as.is = c(TRUE), stringsAsFactors = FALSE)
 RunFDSS<-sqlFetch(ch,"dbo.vw_FDSS_by_AnslysisPORID",as.is = c(TRUE), stringsAsFactors = FALSE)
 MasterPORs<-sqlFetch(ch,"dbo.tlu_PORs",as.is = c(TRUE), stringsAsFactors = FALSE)
@@ -43,8 +58,9 @@ if (exists('magnifStatsOut3')) {
 }
 
 # End Loop
+ print(currentrow)
  currentrow = currentrow+1
- if(currentrow==10+1)
+ if(currentrow==50+1)
 {
  	break
  }
@@ -53,6 +69,16 @@ if (exists('magnifStatsOut3')) {
 ch <- odbcConnect("Hydro")
 sqlSave(ch,magnifStatsOut3,"dbo.vw_FDSS_by_AnslysisPORID",append=TRUE,rownames=FALSE)
 odbcClose(ch)
+
+# End Loop
+ print(currentchunk)
+ currentchunk = currentchunk+1
+ if(currentchunk==830+1)
+{
+ 	break
+ }
+ }
+
 
 
 
