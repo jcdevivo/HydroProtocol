@@ -9,8 +9,9 @@ library("dplyr", lib.loc="C:/R/R-3.5.0/library")
 totalchunks<-830
 currentchunk<-1
 
-repeat 
+repeat
 {
+
 ch <- odbcConnect("Hydro")
 POR2run<-sqlFetch(ch,"dbo.xtab_site_no_X_PORs_for_Analysis",as.is = c(TRUE), stringsAsFactors = FALSE)
 siteInfo<-sqlFetch(ch,"dbo.tbl_siteInfo",as.is = c(TRUE), stringsAsFactors = FALSE)
@@ -58,7 +59,7 @@ if (exists('magnifStatsOut3')) {
 }
 
 # End Loop
- print(currentrow)
+ print(c("chunk",currentchunk,"row",currentrow))
  currentrow = currentrow+1
  if(currentrow==50+1)
 {
@@ -71,13 +72,14 @@ sqlSave(ch,magnifStatsOut3,"dbo.vw_FDSS_by_AnslysisPORID",append=TRUE,rownames=F
 odbcClose(ch)
 
 # End Loop
- print(currentchunk)
  currentchunk = currentchunk+1
  if(currentchunk==830+1)
 {
  	break
  }
  }
+
+
 
 
 
