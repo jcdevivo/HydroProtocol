@@ -6,14 +6,16 @@ library("dplyr", lib.loc="C:/R/R-3.5.0/library")
 library("dplyr", lib.loc="C:/R/R-3.5.0/library")
 
 
-totalchunks<-830
+totalchunks<-100
+rowstowrite<-25
 currentchunk<-1
+
 
 repeat
 {
 
 ch <- odbcConnect("Hydro")
-POR2run<-sqlFetch(ch,"dbo.xtab_site_no_X_PORs_for_Analysis",as.is = c(TRUE), stringsAsFactors = FALSE)
+POR2run<-sqlFetch(ch,"dbo.vw_site_no_X_PORs_for_Analysis",as.is = c(TRUE), stringsAsFactors = FALSE)
 siteInfo<-sqlFetch(ch,"dbo.tbl_siteInfo",as.is = c(TRUE), stringsAsFactors = FALSE)
 RunFDSS<-sqlFetch(ch,"dbo.vw_FDSS_by_AnslysisPORID",as.is = c(TRUE), stringsAsFactors = FALSE)
 MasterPORs<-sqlFetch(ch,"dbo.tlu_PORs",as.is = c(TRUE), stringsAsFactors = FALSE)
@@ -59,9 +61,9 @@ if (exists('magnifStatsOut3')) {
 }
 
 # End Loop
- print(c("chunk",currentchunk,"row",currentrow))
+ print(c("chunk",totalchunks-currentchunk+1,"row",rowstowrite-currentrow+1))
  currentrow = currentrow+1
- if(currentrow==50+1)
+ if(currentrow==rowstowrite+1)
 {
  	break
  }
@@ -72,162 +74,10 @@ sqlSave(ch,magnifStatsOut3,"dbo.vw_FDSS_by_AnslysisPORID",append=TRUE,rownames=F
 odbcClose(ch)
 
 # End Loop
+ print(c("chunk written"))
  currentchunk = currentchunk+1
- if(currentchunk==830+1)
+ if(currentchunk==totalchunks+1)
 {
  	break
  }
  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-library("RODBC", lib.loc="C:/R/R-3.4.1/library")
-library("dataRetrieval", lib.loc="C:/R/R-3.4.1/library")
-library("EflowStats", lib.loc="C:/R/R-3.4.1/library")
-
-ch <- odbcConnect("HydroProtocol")
-
-#Set looping parameters
-looptargetx=25 # Number of records per packet to write to the database at a time
-looptargety=64 # Number of record packets to write
-
-# Start Outer loop
- y<-1
- repeat
-{
-
-if (exists('magnifStatsOut3')){rm(magnifStatsOut3)}
-if (exists('FDSSstation')){rm(FDSSstation)}
-
-# Pull POR and station info from database #
-FDSSstation<- sqlFetch(ch,"qry_FDSS_standard_PORs_to_run", as.is=T)
-
-# Start Loop
- x<-1
- repeat 
-{
-
-#reset variables from last run
-if (exists('dailyQ')){rm(dailyQ)}
-if (exists('dailyQClean')){rm(dailyQClean)}
-if (exists('year_type')){rm(year_type)}
-if (exists('magnifStatsOut')){rm(magnifStatsOut)}
-if (exists('magnifStatsOut2')){rm(magnifStatsOut2)}
-if (exists('magnifStatsOut.with.rowanames')){rm(magnifStatsOut.with.rownames)}
-if (exists('sd')){rm(sd)}
-if (exists('sn')){rm(sn)}
-if (exists('ed')){rm(ed)}
-if (exists('PORID')){rm(PORID)}
-QA="-"
-
-# Fix date formats and other prep stuff
-PORID<-FDSSstation[x,4]
-sn<-FDSSstation[x,1]
-year_type<-FDSSstation[x,5]
-sd<-FDSSstation[x,8]
-sd=as.Date(sd)
-ed<-FDSSstation[x,9]
-ed=as.Date(ed)
-
-
-#Retrieve daily discharge data for period of record of interest
-dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sd, endDate = ed)
-
-#Check data for completeness
-if (!nrow(dailyQ)== 0){dailyQClean <- validate_data(dailyQ[c("Date","X_00060_00003")],yearType=year_type)}
-
-
-#Calculate all FDSS stats
-
-if(!nrow(dailyQ)== 0) {
-	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	if (max(dailyQ[,4])==0) {
-		magnifStatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,QualFDSS="NOFLOW",runtime=Sys.time()))
-	}
-
-	#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-	else if (dailyQClean==FALSE) {
-		
-		magnifStatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,QualFDSS="INSUFF",runtime=Sys.time()))
-	}
-	else if (!dailyQClean==FALSE) {
-		magnifStatsOut <- calc_magnifSeven(dailyQClean,yearType=year_type,digits=3)
-		magnifStatsOut.with.rownames <- data.frame(magnifStatsOut[,-1], row.names=magnifStatsOut[,1])
-		magnifStatsOut2<-t(magnifStatsOut.with.rownames)
-		#add POR, Site number, and QA codes to data frame and write to database
-		magnifStatsOut2<-cbind(magnifStatsOut2, data.frame(site_no=sn, POR_ID=PORID,QualFDSS=QA,runtime=Sys.time()))
-	}
-}
-
-#add nulls for missing data, POR, Site number, and QA codes to data frame and write to database
-else if (nrow(dailyQ)== 0) {
-   		
-		magnifStatsOut2<-cbind(data.frame(lam1=NA, tau2=NA, tau3=NA, tau4=NA, ar1=NA, amplitude=NA, phase=NA, site_no=sn, POR_ID=PORID,QualFDSS="NODATA",runtime=Sys.time()))
-} 
-
-
-
-if (exists('magnifStatsOut3')) {
-	magnifStatsOut3<-rbind(magnifStatsOut3,magnifStatsOut2)
-	}
-
-	else {
-	magnifStatsOut3=magnifStatsOut2
-}
-
-gc()
-
-# End Loop
- x = x+1
- if(x==looptargetx+1)
-{
- 	break
- }
- }
-
-# Write Data to Database
-sqlSave(ch,magnifStatsOut3,"tbl_FDSS_by_PORID",append=TRUE)
-
-# Display total runtime
-runtimeend=magnifStatsOut3[looptargetx,11]
-runtimestart=magnifStatsOut3[1,11]
-
-# End Outer Loop
- y = y+1
- if(y==looptargety+1)
-{
- 	break
- }
-}
-odbcCloseAll()
