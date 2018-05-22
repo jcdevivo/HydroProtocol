@@ -5,8 +5,8 @@ library("lubridate", lib.loc="C:/R/R-3.5.0/library")
 library("dplyr", lib.loc="C:/R/R-3.5.0/library")
 
 
-totalchunks<-100
-rowstowrite<-25
+totalchunks<-1
+rowstowrite<-10
 currentchunk<-1
 
 ch <- odbcConnect("Hydro")
@@ -50,27 +50,41 @@ dailyQ <- readNWISdv(siteNumber = sn, parameterCd = "00060", startDate = sd, end
 
 dailyQClean <- validate_data(dailyQ[c("Date","X_00060_00003")],yearType="water")
 
-magnifStatsOut <- calc_magnifSeven(dailyQClean,yearType="water",digits=3)
-magnifStatsOut.with.rownames <- data.frame(magnifStatsOut[,-1], row.names=magnifStatsOut[,1])
-magnifStatsOut2<-t(magnifStatsOut.with.rownames)
+if (max(dailyQClean$discharge)== 0) {
 
-#add POR, Site number, and QA codes to data frame and write to database
-magnifStatsOut2<-cbind(AnalysisPORID=AnalysisPORID,magnifStatsOut2, data.frame(site_no=sn, runtime=Sys.time()))
+	# Writes a qualification code to the QC table denoting all zeroes for daily flows in the POR being analyzed.
 
-if (exists('magnifStatsOut3')) {
-	magnifStatsOut3<-rbind(magnifStatsOut3,magnifStatsOut2)
+	PORQualOut<-data.frame(cbind(PORQualifierID=1,AnalysisPORID=POR2run[currentrow,3]))
+	ch <- odbcConnect("Hydro")
+	sqlSave(ch,PORQualOut,"dbo.vw_QualifyPORs",append=TRUE,rownames=FALSE)
+	odbcClose(ch)
+
 	} else {
-	magnifStatsOut3=magnifStatsOut2
-}
+
+	magnifStatsOut <- calc_magnifSeven(dailyQClean,yearType="water",digits=3)
+	magnifStatsOut.with.rownames <- data.frame(magnifStatsOut[,-1], row.names=magnifStatsOut[,1])
+	magnifStatsOut2<-t(magnifStatsOut.with.rownames)
+
+	#add POR, Site number, and QA codes to data frame and write to database
+	magnifStatsOut2<-cbind(AnalysisPORID=AnalysisPORID,magnifStatsOut2, data.frame(site_no=sn, runtime=Sys.time()))
+
+	if (exists('magnifStatsOut3')) {
+		magnifStatsOut3<-rbind(magnifStatsOut3,magnifStatsOut2)
+		} else {
+		magnifStatsOut3=magnifStatsOut2
+		}
+	}
+
 
 # End Loop
+
  print(c("chunk",totalchunks-currentchunk+1,"row",rowstowrite-currentrow+1))
  currentrow = currentrow+1
- if(currentrow==rowstowrite+1)
-{
+
+ if(currentrow==rowstowrite+1) {
  	break
  }
- }
+}
 
 ch <- odbcConnect("Hydro")
 sqlSave(ch,magnifStatsOut3,"dbo.vw_FDSS_by_AnslysisPORID",append=TRUE,rownames=FALSE)
@@ -79,8 +93,8 @@ odbcClose(ch)
 # End Loop
  print(c("chunk written"))
  currentchunk = currentchunk+1
- if(currentchunk==totalchunks+1)
-{
+ if(currentchunk==totalchunks+1) {
  	break
  }
- }
+}
+
