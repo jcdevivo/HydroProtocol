@@ -10,16 +10,12 @@ totalchunks<-100
 rowstowrite<-25
 currentchunk<-1
 
-
-repeat
-{
-
 ch <- odbcConnect("Hydro")
 POR2run<-sqlFetch(ch,"dbo.vw_site_no_X_PORs_for_Analysis",as.is = c(TRUE), stringsAsFactors = FALSE)
 siteInfo<-sqlFetch(ch,"dbo.tbl_siteInfo",as.is = c(TRUE), stringsAsFactors = FALSE)
-RunFDSS<-sqlFetch(ch,"dbo.vw_FDSS_by_AnslysisPORID",as.is = c(TRUE), stringsAsFactors = FALSE)
 MasterPORs<-sqlFetch(ch,"dbo.tlu_PORs",as.is = c(TRUE), stringsAsFactors = FALSE)
 odbcClose(ch)
+
 colnames(MasterPORs)[5] <- "AnalysisStartDate"
 colnames(MasterPORs)[6] <- "AnalysisEndDate"
 
@@ -28,6 +24,14 @@ POR2run<-merge(POR2run,siteInfo,by="siteInfoID")
 
 POR2run$AnalysisStartDate<-ymd(as.Date(POR2run$AnalysisStartDate))
 POR2run$AnalysisEndDate<-ymd(as.Date(POR2run$AnalysisEndDate))
+
+repeat
+{
+
+ch <- odbcConnect("Hydro")
+RunFDSS<-sqlFetch(ch,"dbo.vw_FDSS_by_AnslysisPORID",as.is = c(TRUE), stringsAsFactors = FALSE)
+odbcClose(ch)
+
 
 POR2run<-anti_join(POR2run,RunFDSS,by="AnalysisPORID")
 
